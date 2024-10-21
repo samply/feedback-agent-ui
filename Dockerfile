@@ -1,4 +1,9 @@
-FROM openjdk:17-oracle
-ARG JAR_FILE=*.jar
-COPY ${JAR_FILE} application.jar
-ENTRYPOINT ["java", "-jar", "application.jar"]
+FROM node:14-alpine
+WORKDIR /app
+COPY package.json package-lock.json ./
+RUN npm install
+COPY frontend .
+
+RUN npm run build
+
+CMD npm run serve -- --port 8096
