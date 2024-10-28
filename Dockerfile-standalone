@@ -2,8 +2,8 @@ FROM node:alpine
 WORKDIR /app
 COPY package.json package-lock.json ./
 RUN npm install
-COPY frontend .
+COPY . .
 
 RUN npm run build
 
-CMD npm run serve:standalone
+CMD npm run serve:standalone -- --port 8096
