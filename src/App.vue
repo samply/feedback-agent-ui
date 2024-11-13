@@ -80,7 +80,8 @@ export default {
         query: "Specimen?subject=Patient/bbmri-18&type=rna",
         measureReportID: "",
         requestID : "",
-        x_api_key: 'ttsHGwSITs0Eq8L63YWtLVyHymBmULvZIihL6w4t42FBmzp6Eb9SGNd7fZmeUtAI', //API key for the exporter move to .env if needed, now for simplicity it stays here
+        // x_api_key: 'ttsHGwSITs0Eq8L63YWtLVyHymBmULvZIihL6w4t42FBmzp6Eb9SGNd7fZmeUtAI', //API key for the exporter move to .env if needed, now for simplicity it stays here
+        x_api_key: 'TRKZMLTixvsWNUoILF3VUaTyA4JBaTRiCPfFXIWj1tdyl4lZ0B0ONJYD17peS+KR', //API key for the exporter move to .env if needed, now for simplicity it stays here
         exportTemplate: "bbmri-feedback-agent",
         exportListIDTemplate: "bbmri-measure-report-specimen-list",
         file: "",
