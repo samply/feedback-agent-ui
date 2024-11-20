@@ -5,16 +5,13 @@ on:
     branches:
       - main
       - develop
-    # Build then a new version is tagged
+    # Build when a new version is tagged
     tags:
-      - '*.*.*'
+      - '[0-9]+.[0-9]+.[0-9]+'
   pull_request:
     branches:
       - main
       - develop
-  schedule:
-    # Build every night at 1am
-    - cron: '0 1 * * *'
 jobs:
 #  build:
 #    uses: samply/github-workflows/.github/workflows/docker-ci.yml@main
