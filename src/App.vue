@@ -138,7 +138,12 @@ export default {
         })
         .catch(error => {
           // Log any errors encountered during the request
-          console.error("Error fetching specimen ID list:", error);
+          console.error("fetchMeasureReportSpecimenListID: Error fetching specimen ID list:");
+          console.error("fetchMeasureReportSpecimenListID: requestUrl:", requestUrl);
+          if (!this.x_api_key) {
+            console.error("fetchMeasureReportSpecimenListID: x_api_key is not defined");
+          }
+          console.error("fetchMeasureReportSpecimenListID: error:", error);
         });
     },
     /**
