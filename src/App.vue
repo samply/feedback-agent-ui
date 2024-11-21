@@ -1,3 +1,21 @@
+<!--
+This Vue component serves as a feedback interface for linking specimens with measure report IDs. 
+The component includes:
+  - An input field to enter a measure report ID and fetch associated specimens.
+  - A field to input custom FHIR queries to search for specimens.
+  - A checkbox table to select specimens for submission with a specified request ID.
+  - A "Submit" button to send selected specimens to a feedback backend.
+
+Key Features:
+  - Polling functionality for asynchronous data retrieval.
+  - Success and error alerts based on submission results.
+  - API integration with FHIR queries and backend requests using Axios.
+
+Dependencies:
+  - Axios for HTTP requests.
+  - CheckboxTable.vue for displaying selectable specimen data.
+
+-->
 <template>
   <div class="container text-center  mt-5 mb-5">
     <h1 class="mt-5 fw-bolder text-success "> Feedback Agent </h1>
@@ -58,7 +76,7 @@
           Selected entries uploaded successfully.
         </div>
         <div class="alert alert-danger" role="alert" v-if="enableDangerAlert">
-          Failed to uploaded selected entries.
+          Alert: failed to upload entries.
         </div>
       </div>
     </div>
@@ -80,7 +98,8 @@ export default {
         query: "Specimen?subject=Patient/bbmri-18&type=rna",
         measureReportID: "",
         requestID : "",
-        x_api_key: 'ttsHGwSITs0Eq8L63YWtLVyHymBmULvZIihL6w4t42FBmzp6Eb9SGNd7fZmeUtAI', //API key for the exporter move to .env if needed, now for simplicity it stays here
+        // x_api_key: 'ttsHGwSITs0Eq8L63YWtLVyHymBmULvZIihL6w4t42FBmzp6Eb9SGNd7fZmeUtAI', //API key for the exporter move to .env if needed, now for simplicity it stays here
+        x_api_key: 'TRKZMLTixvsWNUoILF3VUaTyA4JBaTRiCPfFXIWj1tdyl4lZ0B0ONJYD17peS+KR', //API key for the exporter move to .env if needed, now for simplicity it stays here
         exportTemplate: "bbmri-feedback-agent",
         exportListIDTemplate: "bbmri-measure-report-specimen-list",
         file: "",
@@ -93,6 +112,12 @@ export default {
     }
   },
   methods: {
+    /**
+     * Fetches the specimen list ID for a given measure report ID.
+     * It sends a POST request to the exporter API with the encoded measure report ID.
+     * It uses an API key (x_api_key) for authentication.
+     * On successful response, it awaits the list from the provided response URL.
+     */
     fetchMeasureReportSpecimenListID() {
       this.content.data = [];
       axios.defaults.headers['X-API-KEY'] = this.x_api_key;
@@ -104,14 +129,32 @@ export default {
       const apiUrl = process.env.VUE_APP_EXPORTER_URL;
       const requestUrl = `${apiUrl}/request?query=${encodedQuery}&query-format=FHIR_SEARCH&template-id=${this.exportListIDTemplate}&output-format=JSON`;
 
-      axios.post(requestUrl)
+     // Send a POST request to the constructed URL
+     axios.post(requestUrl)
         .then(response => {
+          // Successful response
           this.awaitList(response.data.responseUrl);
+          console.log("List available");
+        })
+        .catch(error => {
+          // Log any errors encountered during the request
+          console.error("Error fetching specimen ID list:", error);
         });
     },
+    /**
+     * Fetches the specimen list for a given query.
+     * It sends a POST request to the exporter API with the query and template id.
+     * It uses an API key (x_api_key) for authentication.
+     * On successful response, it awaits the list from the provided response URL.
+     */
     fetchSpecimen() {
       this.content.data = [];
       axios.defaults.headers['X-API-KEY'] = this.x_api_key;
+
+      // Don't bother fetching a Specimen if this.query is empty
+      if (this.query === "") {
+        return;
+      }
       
       // Encode the query string before appending it to the URL
       const encodedQuery = encodeURIComponent(this.query);
@@ -123,6 +166,10 @@ export default {
       axios.post(requestUrl)
         .then(response => {
           this.awaitForSamples(response.data.responseUrl);
+        })
+        .catch(error => {
+          // Log any errors encountered during the request
+          console.error("Error fetching specimen:", error);
         });
     },
     // polling, because data are not availible right away, exporter takes some time to generate files
@@ -134,6 +181,13 @@ export default {
       this.query = "";
       this.loading = true;
 
+      /**
+       * This function repeatedly sends a GET request to JSONUrl until it receives a successful response or reaches the maximum number of attempts.
+       * If the response is successful (200 status code) and contains a SpecimenList, it extracts the listID from the first entry and updates this.query.
+       * If the response is not successful or does not contain a SpecimenList, it increments the attempt counter and retries after a specified interval (pollInterval).
+       * If the maximum number of attempts (maxPollAttempts) is reached, it stops polling and logs a message.
+       * The function also catches and logs any errors that occur during the polling process, and retries after the specified interval.
+       */
       const poll = () => {
         axios.get(JSONUrl)
           .then(response => {
@@ -175,6 +229,15 @@ export default {
 
       poll();
     },
+  /**
+   * Fetches the list of samples from the provided JSON URL.
+   * It sends a GET request to the URL and waits for the response.
+   * If the response is successful and contains the 'Samples' key,
+   * it extracts the sample list and assigns it to this.file.
+   * If the response is not successful, it retries after a polling interval.
+   * It gives up after a maximum number of poll attempts.
+   * @param {string} JSONUrl - URL to poll for the list of samples
+   */
     awaitForSamples(JSONUrl) {
       axios.defaults.headers['X-API-KEY'] = null;
       const pollInterval = 5000; // 5000 milliseconds
@@ -223,25 +286,48 @@ export default {
 
       poll();
     },
-    //post selected data in the local FBagent database
-    postSelected(){
+    /**
+     * Sends selected data to the local FBagent database.
+     * This method sends a POST request to the backend API (VUE_APP_FB_BACKEND_URL)
+     * with selected data from a checkbox table (checkBoxTable). It adds a requestID
+     * to each selected item and displays a success or error alert based on the
+     * response status.
+     */
+    postSelected() {
+      // Reset alert flags
       this.enableSuccessAlert = false;
       this.enableDangerAlert = false;
-      let postData = this.$refs.checkBoxTable.selected();
+
+      // Retrieve selected data from the checkbox table
+      let postData = this.$refs.checkBoxTable?.selected();
+      if (!postData) {
+        console.error("Error: Selected data is null or undefined");
+        this.enableSuccessAlert = false;
+        this.enableDangerAlert = true;
+        return;
+      }
+
+      // Add requestID to each selected item
       postData.forEach((element) => {
-          element.requestID = this.requestID;
+        element.requestID = this.requestID;
       });
+
+      // Construct API URL
       const apiUrl = process.env.VUE_APP_FB_BACKEND_URL;
-      axios.post(`${apiUrl}/multiple-specimen-feedback`, { "feedbackList" : postData })
-      .then(response => {
+
+      // Send POST request with feedbackList
+      axios.post(`${apiUrl}/multiple-specimen-feedback`, { "feedbackList": postData })
+        .then(response => {
           if (response.status == 200) {
+            // Show success alert
             this.enableSuccessAlert = true;
             this.enableDangerAlert = false;
           } else {
+            // Show error alert
             this.enableSuccessAlert = false;
             this.enableDangerAlert = true;
           }
-      });
+        });
     }
   },
 }
