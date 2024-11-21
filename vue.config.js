@@ -7,6 +7,7 @@ module.exports = defineConfig({
 */
 module.exports = {
   configureWebpack: {
+    devtool: 'source-map',
     output: {
       libraryTarget: "system",
     },
