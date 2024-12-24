@@ -98,8 +98,7 @@ export default {
         query: "Specimen?subject=Patient/bbmri-18&type=rna",
         measureReportID: "",
         requestID : "",
-        // x_api_key: 'ttsHGwSITs0Eq8L63YWtLVyHymBmULvZIihL6w4t42FBmzp6Eb9SGNd7fZmeUtAI', //API key for the exporter move to .env if needed, now for simplicity it stays here
-        x_api_key: 'TRKZMLTixvsWNUoILF3VUaTyA4JBaTRiCPfFXIWj1tdyl4lZ0B0ONJYD17peS+KR', //API key for the exporter move to .env if needed, now for simplicity it stays here
+        x_api_key: '', // API key for the exporter. Get this from backend.
         exportTemplate: "bbmri-feedback-agent",
         exportListIDTemplate: "bbmri-measure-report-specimen-list",
         file: "",
@@ -112,6 +111,23 @@ export default {
     }
   },
   methods: {
+    /**
+     * Fetches the x_api_key from a secure API endpoint.
+     */
+    fetchApiKey() {
+      const apiUrl = process.env.VUE_APP_FB_BACKEND_URL;
+      const apiKeyUrl = `${apiUrl}/exporter-api-key`;
+
+      // Use axios to fetch the API key
+      axios.get(apiKeyUrl)
+        .then(response => {
+          //this.x_api_key = response.data.apiKey; // Ensure the response contains the key as `apiKey`
+          this.x_api_key = response.data;
+        })
+        .catch(error => {
+          console.error("Error fetching x_api_key:", error);
+        });
+    },
     /**
      * Fetches the specimen list ID for a given measure report ID.
      * It sends a POST request to the exporter API with the encoded measure report ID.
@@ -335,6 +351,13 @@ export default {
         });
     }
   },
+
+  /**
+   * Call fetchApiKey when the component is created to ensure x_api_key is loaded.
+   */
+  created() {
+    this.fetchApiKey();
+  }
 }
 </script>
 
