@@ -136,7 +136,11 @@ export default {
      */
     fetchMeasureReportSpecimenListID() {
       this.content.data = [];
-      axios.defaults.headers['X-API-KEY'] = this.x_api_key;
+      if (this.x_api_key === null || this.x_api_key === "") {
+        console.error("no API key available for Exporter");
+      } else {
+        axios.defaults.headers['X-API-KEY'] = this.x_api_key;
+      }
       
       // Encode the query string before appending it to the URL
       const encodedQuery = encodeURIComponent(`MeasureReport?_id=${this.measureReportID}`);
@@ -315,7 +319,7 @@ export default {
      * response status.
      */
     postSelected() {
-      // Reset alert flags
+        // Reset alert flags
       this.enableSuccessAlert = false;
       this.enableDangerAlert = false;
 
@@ -334,20 +338,33 @@ export default {
       });
 
       // Construct API URL
-      const apiUrl = process.env.VUE_APP_FB_BACKEND_URL;
+      //const apiUrl = process.env.VUE_APP_FB_BACKEND_URL;
+      const apiUrl = `${process.env.VUE_APP_FB_BACKEND_URL}/multiple-specimen-feedback`;
+      console.log("API URL:", apiUrl);
 
       // Send POST request with feedbackList
-      axios.post(`${apiUrl}/multiple-specimen-feedback`, { "feedbackList": postData })
+      const headers = {
+        "Content-Type": "application/json",
+      };
+      axios.post(apiUrl, JSON.stringify({ feedbackList: postData }), { headers })
         .then(response => {
           if (response.status == 200) {
             // Show success alert
             this.enableSuccessAlert = true;
             this.enableDangerAlert = false;
           } else {
+            console.error("Problem with multiple-specimen-feedback, status:", response.status);
             // Show error alert
             this.enableSuccessAlert = false;
             this.enableDangerAlert = true;
           }
+        })
+        .catch(error => {
+          // Log any errors encountered during the request
+          console.error("Error with multiple-specimen-feedback:", error);
+          // Show error alert
+          this.enableSuccessAlert = false;
+          this.enableDangerAlert = true;
         });
     }
   },
