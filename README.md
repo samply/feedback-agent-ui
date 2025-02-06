@@ -3,14 +3,18 @@ This is the UI for the feedback agent part of the metadata feedback system. It
 provides a fontend that allows biobank administrators to associate metadata (e.g. the DOIs of relevant publications) with
 locally held samples.
 
+## Building for production
+``` code
+docker build -t samply/feedback-agent-ui .
+```
+
 ## Running the UI
 The UI is designed to be run within a [Bridgehead](https://github.com/samply/bridgehead),
 but it can also be run locally if you want to test it.
 
 ### Docker
-The Dockerfile in this folder can be used to build and run the UI. E.g.:
+Build as shown above, and then:
 ``` code
-docker build -t samply/feedback-agent-ui .
 docker run -p 8086:8086 samply/feedback-agent-ui
 ```
 This will build the app and make it available on ```http://localhost:8086``` in a locally
