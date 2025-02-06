@@ -1,4 +1,7 @@
 # Feedback agent UI
+This is the UI for the feedback agent part of the metadata feedback system. It
+provides a fontend that allows biobank administrators to associate metadata (e.g. the DOIs of relevant publications) with
+locally held samples.
 
 ## Running the UI
 The UI is designed to be run within a [Bridgehead](https://github.com/samply/bridgehead),
