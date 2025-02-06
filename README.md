@@ -1,24 +1,41 @@
-# teiler-app4
+# Feedback agent UI
 
-## Project setup
+## Running the UI
+The UI is designed to be run within a [Bridgehead](https://github.com/samply/bridgehead),
+but it can also be run locally if you want to test it.
+
+### Docker
+The Dockerfile in this folder can be used to build and run the UI. E.g.:
+``` code
+docker build -t samply/feedback-agent-ui .
+docker run -p 8086:8086 samply/feedback-agent-ui
 ```
+This will build the app and make it available on ```http://localhost:8086``` in a locally
+running browser.
+
+### Build and test with npm
+If you have node.js and npm installed on your computer, you can run the UI on bare metal:
+``` code
 npm install
-```
-
-### Compiles and hot-reloads for development
-```
 npm run serve
 ```
+This will build the app and make it available on ```http://localhost:8086``` in a locally
+running browser.
 
-### Compiles and minifies for production
-```
-npm run build
-```
+## Using the UI
+When the UI first opens, you will see three data entry fields plus two buttons.
 
-### Lints and fixes files
-```
-npm run lint
-```
+The first field is used for entering the ID of the measure report you are interested in.
+This can be obtained from the locally running Blaze store.
 
-### Customize configuration
-See [Configuration Reference](https://cli.vuejs.org/config/).
+Once you have entered the ID, you can click on the button "Get specimen list". Assuming
+that a backend is available, you will shortly see a new query appearing in the second
+data entry field. You can modify this query if you wish, or use as-is. To run the query,
+click the button "Browse by query".
+
+After a short delay, a list of specimens retrieved by the query will appear. You can
+click in the check boxes to select the specimens relevant to you.
+
+Finally, you can enter the ID of the string that you want to associate with the specimen in the
+third field, and then press "Submit". This will initiate a polling process, by which the
+central feedback hub will be asked if it has any tasks for the submitted ID.
